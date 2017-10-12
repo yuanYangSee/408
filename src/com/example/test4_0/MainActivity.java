@@ -41,7 +41,7 @@ public class MainActivity extends Activity implements OnClickListener
 	private Button btn_open_device;
 	private Button btn_verify;
 	private Button btn_data_up;
-	private TextView mTvInfo;
+	private TextView textData;
 	private Button btn_test2;
 
 	private UsbManager mUsbManager;
@@ -51,15 +51,9 @@ public class MainActivity extends Activity implements OnClickListener
 
 	private boolean mSensorInited = false;
 
-		private final int mVendorID = 8457; // 190
-		private final int mProductID = 30264;
+		private final int mVendorID = 1155; // 408
+		private final int mProductID = 22304;
 	
-//		private final int mVendorID = 8210; //big 
-//		private final int mProductID =8209;
-	 
-//	private final int mVendorID = 1155; //STM32 
-//	private final int mProductID =22304;
-
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
 	{
@@ -78,9 +72,9 @@ public class MainActivity extends Activity implements OnClickListener
 		btn_verify = (Button) findViewById(R.id.btn_verify);
 		btn_data_up=(Button)findViewById(R.id.btn_data_up);
 		btn_test2=(Button)findViewById(R.id.test2);
-
-		mTvInfo = (TextView) findViewById(R.id.ReturnData);
-		mTvInfo.setMovementMethod(ScrollingMovementMethod.getInstance());
+		textData = (TextView) findViewById(R.id.textData);
+		
+		textData.setMovementMethod(ScrollingMovementMethod.getInstance());
 
 		btn_reset.setOnClickListener(this);
 		btn_get_max_lnu.setOnClickListener(this);
@@ -109,11 +103,12 @@ public class MainActivity extends Activity implements OnClickListener
 		// TODO Auto-generated method stub
 		switch (v.getId())
 		{
+		//打开
 		case R.id.btn_open_device:
 			Log.d(TAG, "R.id.OpenDevice");
 			mSensorInited = InitUsbDevice(MainActivity.this, mVendorID, mProductID);
 			break;
-
+		//握手
 		case R.id.btn_verify:
 			if (mSensorInited)
 			{
@@ -124,7 +119,7 @@ public class MainActivity extends Activity implements OnClickListener
 					DeviceIO.showToast(MainActivity.this, "核验成功。", Toast.LENGTH_SHORT);
 				} else
 				{
-					DeviceIO.showToast(MainActivity.this, "核验。", Toast.LENGTH_SHORT);
+					DeviceIO.showToast(MainActivity.this, "核验失败。", Toast.LENGTH_SHORT);
 				}
 			} else
 			{
@@ -136,9 +131,9 @@ public class MainActivity extends Activity implements OnClickListener
 			if (mSensorInited)
 			{
 				int number = DeviceIO.getMaxLnu();
-				String str1 = mTvInfo.getText().toString();
+				String str1 = textData.getText().toString();
 				str1 += "\nget_max_lun:" + Integer.toString(number);
-				mTvInfo.setText(str1);
+				textData.setText(str1);
 			} else
 			{
 				DeviceIO.showToast(MainActivity.this, "设备未打开，请打开设备。", Toast.LENGTH_SHORT);
@@ -155,75 +150,76 @@ public class MainActivity extends Activity implements OnClickListener
 				DeviceIO.showToast(MainActivity.this, "设备未打开，请打开设备。", Toast.LENGTH_SHORT);
 			}
 			break;
-			
+
 		case R.id.btn_data_up:
 			Log.d(TAG, " R.id.btn_data_up");
-			
+
 			if (mSensorInited)
 			{
-				String str = mTvInfo.getText().toString();
-				
-				//byte[] FpArray = new byte[65536];
+				String str = textData.getText().toString();
+
+				// byte[] FpArray = new byte[65536];
 				byte[] FpArray = new byte[65536];
-				
+
 				int result = DeviceIO.UpImage(mUsbDevice, FpArray, FpArray.length);
-				if ( 0==result)
-                {
-					Log.d(TAG, "DeviceIO UpImage OK."); 
-					DeviceIO.showToast(getApplicationContext(), "发送成功。", Toast.LENGTH_SHORT);
-                }else 
+				if (0 == result)
 				{
-                	Log.d(TAG, "DeviceIO UpImage failed."); 
-                	break;
+					Log.d(TAG, "DeviceIO UpImage OK.");
+					DeviceIO.showToast(getApplicationContext(), "发送成功。", Toast.LENGTH_SHORT);
+				} else
+				{
+					Log.d(TAG, "DeviceIO UpImage failed.");
+					break;
 				}
 
-				/*for(int i=0; i<FpArray.length; i++)
-				{ str += Integer.toHexString(FpArray[i]&0x00FF) + " "; }    
-				str += "\n"; 
-				mTvInfo.setText(str);*/
-				Log.d(TAG, "FpArray="+Arrays.toString(FpArray));
+				/*
+				 * for(int i=0; i<FpArray.length; i++) { str +=
+				 * Integer.toHexString(FpArray[i]&0x00FF) + " "; } str += "\n";
+				 * mTvInfo.setText(str);
+				 */
+				Log.d(TAG, "FpArray=" + Arrays.toString(FpArray));
 
 			} else
 			{
 				DeviceIO.showToast(MainActivity.this, "设备未打开，请打开设备。", Toast.LENGTH_SHORT);
 			}
-			
+
 			break;
-			
+
 		case R.id.test2:
-			Log.d(TAG, "R.id.test2"); 
+			Log.d(TAG, "R.id.test2");
 			if (mSensorInited)
 			{
-				String str = mTvInfo.getText().toString();
-				
-				//byte[] FpArray = new byte[65536];
-				byte[] data = new byte[256];//***16KB
-				
+				String str = textData.getText().toString();
+
+				// byte[] FpArray = new byte[65536];
+				byte[] data = new byte[256];// ***16KB
+
 				int result = DeviceIO.Test(mUsbDevice, data);
-				if ( 0==result)
-                {
-					Log.d(TAG, "DeviceIO Test OK."); 
-					DeviceIO.showToast(getApplicationContext(), "发送成功。", Toast.LENGTH_SHORT);
-                }else 
+				if (0 == result)
 				{
-                	Log.d(TAG, "DeviceIO Test failed."); 
-                	break;
+					Log.d(TAG, "DeviceIO Test OK.");
+					DeviceIO.showToast(getApplicationContext(), "发送成功。", Toast.LENGTH_SHORT);
+				} else
+				{
+					Log.d(TAG, "DeviceIO Test failed.");
+					break;
 				}
 
-				/*for(int i=0; i<data.length; i++)
-				{ str += Integer.toHexString(data[i]&0x00FF) + " "; }    
-				str += "\n"; 
-				mTvInfo.setText(str);*/
-				Log.d(TAG, "FpArray="+Arrays.toString(data));
+				/*
+				 * for(int i=0; i<data.length; i++) { str +=
+				 * Integer.toHexString(data[i]&0x00FF) + " "; } str += "\n";
+				 * mTvInfo.setText(str);
+				 */
+				Log.d(TAG, "FpArray=" + Arrays.toString(data));
 
 			} else
 			{
 				DeviceIO.showToast(MainActivity.this, "设备未打开，请打开设备。", Toast.LENGTH_SHORT);
 			}
-			
-			
+
 			break;
-			
+
 		default:
 			break;
 		}

@@ -230,18 +230,58 @@ public class DeviceDatas
 		return i;
 	}
 	
-	//机器校验
+	//握手口令 0x02,0x01,0xef,0xef
 	int UDiskVerfiy()
 	{
+		Log.d(TAG, "UDiskVerfiy()"); 
+		int ret = -1;
+		int i = 0;
+		byte[] di_CSW = new byte[13];
+		byte[] buffer=new byte[4];
+
+		byte[] do_CBW = new byte[]
+				{	    (byte) 0x55, (byte) 0x53, (byte) 0x42, (byte) 0x43, // 固定值 0~3
+						(byte) 0x28, (byte) 0xe8, (byte) 0x3e, (byte) 0xfe, // 4~7自定义,与返回的CSW中的值是一样的
+						(byte) 0x04, (byte) 0x00, (byte) 0x00, (byte) 0x00, // 8~11传输数据长度为4字节
+						(byte) 0x80, 										// (12th 0x80-in)
+						(byte) 0x00, 										// 13th LNU为0,则设为0
+						(byte) 0x04, 										// 14th	命令长度 command length
+						(byte) 2, (byte) 1, (byte) -17, (byte)-17, // READ	FORMAT CAPACITIES,后面的0x00皆被忽略
+						(byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00,	//				
+						(byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, 
+						(byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00 };
+
+		ret = mConnection.bulkTransfer(mEndpointOut, do_CBW, do_CBW.length, 1000);
+		if (ret != 31)
+	    {
+	      Log.e(TAG, "1...UDiskVerfiy DO_CBW fail!\n");
+	      return -301;
+	    }
 		
-		ByteBuffer buffer = ByteBuffer.allocate(65536);
-
-		Byte cmd[] ={ 0x13, 0x00, 0x00, 0x00, 0x00, 0x00 };
-
-		if (UDiskDownData(cmd, 1000)!=0)
+		if ((this.mEndpointIn != null) && (this.mConnection != null))
 		{
-			return -101;
+			ret = this.mConnection.bulkTransfer(this.mEndpointIn, buffer, 4, 1000);
 		}
+		Log.e(TAG, "mEndpointIn ret=" + ret);
+		
+		if ((this.mEndpointIn != null) && (this.mConnection != null))
+		{
+			ret = this.mConnection.bulkTransfer(this.mEndpointIn, di_CSW, 13, 1000);
+		} 
+
+		if ((di_CSW[3] != 83) || (di_CSW[12] != 0))
+		{
+			Log.e(TAG, "2...UDiskVerfiy DI_CSW fail!\n");
+			return -302;
+		}
+		for (i = 4; i < 8; i++)
+		{
+			if (di_CSW[i] == do_CBW[i])
+				continue;
+			Log.e(TAG, "4...UDiskVerfiy DI_CSW fail!\n");
+			return -303;
+		}
+		Log.e(TAG, "buffer=" + Arrays.toString(buffer));
 		return 0;
 	}
 

@@ -84,7 +84,7 @@ public class DeviceIO
 		if (isConnected)
 		{
 			nRet = Datas.UDiskVerfiy();
-			Log.d(TAG, "UDiskVerfiy return="+nRet);
+			Log.d(TAG, "UDiskVerfiy return="+nRet+" Œ’ ÷≥…π¶");
 		}
 		return nRet;
 	}
